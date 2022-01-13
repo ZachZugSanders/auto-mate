@@ -34,30 +34,31 @@ def driver_choice(which_driver: str):
     """
     from selenium import webdriver
     which_driver = which_driver.upper()
-    if which_driver == 'CHROME':
-        from webdriver_manager.chrome import ChromeDriverManager
-        driver = webdriver.Chrome(ChromeDriverManager().install())
-    elif which_driver == 'CHROMIUM':
-        from webdriver_manager.chrome import ChromeDriverManager
-        from webdriver_manager.utils import ChromeType
-        driver = webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
-    elif which_driver == 'FIREFOX':
-        from webdriver_manager.firefox import GeckoDriverManager
-        driver = webdriver.Firefox(executable_path=GeckoDriverManager().install())
-    elif which_driver == 'INTERNETEXPLORER':
-        logging.warning("You mother fucker, seriously?!")
-        from webdriver_manager.microsoft import IEDriverManager
-        driver = webdriver.Ie(IEDriverManager().install())
-    elif which_driver == 'EDGE':
-        from webdriver_manager.microsoft import EdgeChromiumDriverManager
-        driver = webdriver.Edge(EdgeChromiumDriverManager().install())
-    elif which_driver == 'OPERA':
-        from webdriver_manager.opera import OperaDriverManager
-        driver = webdriver.Opera(executable_path=OperaDriverManager().install())
-    else:
-        logging.error('Specified Driver is not present in webdriver_manager')
-        raise NotImplementedError(which_driver)
-    return driver
+
+    match which_driver:
+        case 'CHROME':
+            from webdriver_manager.chrome import ChromeDriverManager
+            driver = webdriver.Chrome(ChromeDriverManager().install())
+        case 'CHROMIUM':
+            from webdriver_manager.chrome import ChromeDriverManager
+            from webdriver_manager.utils import ChromeType
+            return webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+        case 'FIREFOX':
+            from webdriver_manager.firefox import GeckoDriverManager
+            return webdriver.Firefox(executable_path=GeckoDriverManager().install())
+        case 'INTERNETEXPLORER':
+            logging.warning("Seriously?")
+            from webdriver_manager.microsoft import IEDriverManager
+            return webdriver.Ie(IEDriverManager().install())
+        case 'EDGE':
+            from webdriver_manager.microsoft import EdgeChromiumDriverManager
+            return webdriver.Edge(EdgeChromiumDriverManager().install())
+        case 'OPERA':
+            from webdriver_manager.opera import OperaDriverManager
+            return webdriver.Opera(executable_path=OperaDriverManager().install())
+        case None:
+            logging.error('Specified Driver is not present in webdriver_manager')
+            raise NotImplementedError(which_driver)
 
 
 class CorePage(object):
