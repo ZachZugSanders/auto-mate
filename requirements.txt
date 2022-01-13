@@ -1,0 +1,14 @@
+wheel
+twine
+dominate
+requests
+pyvirtualdisplay
+webdriver-manager
+nose
+pytest
+PyYAML
+waiting
+selenium
+python-owasp-zap-v2.4
+beautifulsoup4
+lorem-text
