@@ -46,16 +46,16 @@ def auth_headless(username: str, password: str, cluster: str):
     return cookies[0]
 
 
-def auth_headed(driver, username: str, password: str, cluster: str):
+def auth_headed(driver, username: str, password: str, site: str):
     core = CorePage(driver)
-    driver.get(cluster)
+    driver.get(site)
     core.by_id(LoginPage.input_login_username_id).send_keys(username)
     core.by_id(LoginPage.input_login_password_id).send_keys(password)
     core.by_id(LoginPage.button_login_sign_in_id).click()
     waiting = 0
     timeout = 20
     while waiting <= timeout:
-        if driver.current_url.__contains__(cluster):
+        if driver.current_url.__contains__(site):
             break
         else:
             time.sleep(1)
@@ -65,15 +65,15 @@ def auth_headed(driver, username: str, password: str, cluster: str):
 FILENAME = "../../tests/api/authentication_file.json"
 USERNAME = environ.get('SITE_USERNAME')
 PASSWORD = environ.get('SITE_PASSWORD')
-CLUSTER = environ.get('SITE')
+SITE = environ.get('SITE')
 
 assert USERNAME
 assert PASSWORD
-assert CLUSTER
+assert SITE
 
 
-def get_auth_token(username: str, password: str, cluster: str):
-    token = auth_headless(username=username, password=password, cluster=cluster)
+def get_auth_token(username: str, password: str, site: str):
+    token = auth_headless(username=username, password=password, cluster=site)
     cookie = token['value']
     environ['AUTH_TOKEN_VALUE'] = cookie
     environ['AUTH_TOKEN_NAME'] = '_oauth2_proxy'
@@ -90,10 +90,7 @@ def token_file():
         logging.info(auth_file_path)
         return auth_file_path
     else:
-        _oauth_proxy_cookie = get_auth_token(username=USERNAME,
-                                             password=PASSWORD,
-                                             cluster=CLUSTER
-                                             )
+        _oauth_proxy_cookie = get_auth_token(username=USERNAME, password=PASSWORD, site=SITE)
         with open(FILENAME, 'w') as f:
             f.write(json.dumps(_oauth_proxy_cookie))
         return FILENAME
