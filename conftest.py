@@ -6,8 +6,8 @@ from os import environ
 import pytest
 from selenium import webdriver
 
-from stuff.authentication import auth_headed
-from stuff import CorePage
+from fenrir.authentication import auth_headed
+from fenrir import CorePage
 
 test_os = os.getenv('TEST_OS')
 browser = os.getenv('TEST_BROWSER')
@@ -15,6 +15,7 @@ test_name = uuid.uuid4()
 test_runner_address = os.getenv('TEST_RUNNER')
 username = os.getenv('SITE_USERNAME')
 password = os.getenv('SITE_PASSWORD')
+site = os.getenv('SITE')
 
 
 @pytest.fixture(scope="class")
