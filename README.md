@@ -5,13 +5,11 @@ done to test a product.
 ---
 
 ```python
-import stuff
 import pytest
 
-
-@pytest.mark.usefixtures('setup_remote_test')
-class TestSomeStuff:
-    def test_do_some_stuff(self):
+@pytest.mark.usefixtures('setup_fixture')
+class TestSuiteOfTests:
+    def test_do_some_functionality(self):
         some_stuff = self.core.by_id('placeholder')
         assert some_stuff.text is not ''
 ```

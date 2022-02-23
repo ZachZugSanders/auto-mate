@@ -12,3 +12,4 @@ selenium
 python-owasp-zap-v2.4
 beautifulsoup4
 lorem-text
+python-dotenv

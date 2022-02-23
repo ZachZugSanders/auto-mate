@@ -10,7 +10,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 
-from stuff import CorePage
+from auto.fenrir import CorePage
 
 
 class LoginPage:

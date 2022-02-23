@@ -1,7 +1,7 @@
 import re
 from bs4 import BeautifulSoup
 from authentication import auth_headless
-from stuff import CorePage
+from auto.fenrir import CorePage
 from os import environ
 
 
