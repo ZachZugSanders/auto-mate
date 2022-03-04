@@ -6,7 +6,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support.wait import WebDriverWait
 
-timeout=wait_timeout = 20
+timeout = wait_timeout = 10
 
 
 class BaseEndpoint:
@@ -69,6 +69,12 @@ class CorePage(object):
     """
     def __init__(self, driver):
         self.driver = driver
+
+    def scroll_to_top(self):
+        self.driver.execute_script("window.scroll(0, 0);")
+
+    def scroll_to_bottom(self):
+        self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
 
     def by_name(self, name_selector):
         try:
