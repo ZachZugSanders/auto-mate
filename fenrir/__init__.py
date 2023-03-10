@@ -9,128 +9,89 @@ from selenium.webdriver.support.wait import WebDriverWait
 timeout = wait_timeout = 10
 
 
-class BaseEndpoint:
-    def __init__(self, site: str = environ.get('SITE')):
-        self.site = site
-        assert self.site
+class InvalidWebdriverException(Exception):
 
-    def build_endpoint(self, endpoint: str, extra_ending: str = None):
-        if endpoint and extra_ending is None:
-            built_endpoint = f"{self.site}/api/{endpoint}"
-            logging.info('\n : Endpoint built for request:' + built_endpoint + '\n')
-            return built_endpoint
-        elif endpoint and extra_ending is not None:
-            built_endpoint = f"{self.site}/api/{endpoint}/{extra_ending}"
-            logging.info('\n : Endpoint built for request with extra ending:' + built_endpoint + '\n')
-            return built_endpoint
-        else:
-            raise Exception('Endpoint does not have a value.')
+    def __int__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 
-def driver_choice(which_driver: str):
+def webdriver_create(which_driver: str, opts=None):
     """
-    :return: Webdriver.exe
+    :param which_driver: str - possible inputs: ['Chrome', 'Safari', 'Edge', 'Chromium', 'Firefox']
+    :param opts: object
+    :return: Instance of a Webdriver of the specified variety from the parameter.
     """
+    if opts is None:
+        opts = {}
     from selenium import webdriver
     which_driver = which_driver.upper()
 
     match which_driver:
         case 'CHROME':
             from webdriver_manager.chrome import ChromeDriverManager
-            return webdriver.Chrome(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opts)
         case 'CHROMIUM':
+            from selenium.webdriver.chrome.service import Service as ChromeService
             from webdriver_manager.chrome import ChromeDriverManager
-            from webdriver_manager.utils import ChromeType
-            return webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+            from webdriver_manager.chrome import ChromeType
+            return webdriver.Chrome(
+                service=ChromeService(ChromeDriverManager(
+                    chrome_type=ChromeType.CHROMIUM).install()), options=opts)
         case 'FIREFOX':
             from webdriver_manager.firefox import GeckoDriverManager
-            return webdriver.Firefox(executable_path=GeckoDriverManager().install())
-        case 'INTERNETEXPLORER':
-            logging.warning("Seriously?")
-            from webdriver_manager.microsoft import IEDriverManager
-            return webdriver.Ie(IEDriverManager().install())
+            driver = webdriver.Firefox(service=Service(executable_path=GeckoDriverManager().install()), options=opts)
         case 'EDGE':
             from webdriver_manager.microsoft import EdgeChromiumDriverManager
-            return webdriver.Edge(EdgeChromiumDriverManager().install())
-        case 'OPERA':
-            from webdriver_manager.opera import OperaDriverManager
-            return webdriver.Opera(executable_path=OperaDriverManager().install())
+            driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()), options=opts)
         case 'SAFARI':
-            return webdriver.Safari()
-        case None:
-            logging.error('Specified Driver is not present in webdriver_manager')
-            raise NotImplementedError(which_driver)
+            driver = webdriver.Safari(options=opts)
+        case _:
+            raise InvalidWebdriverException(which_driver,
+                                            f'Specified Driver {which_driver} is not present in webdriver_manager')
+    driver.implicitly_wait(10)
+    return driver
 
 
-class CorePage(object):
+class CorePage:
     """
-    Class which will wait for elements to appear. Once the web element has appeared
-    operations may be performed upon them.
+    This Class extends selenium features to behave in a specific way for to override some functions that otherwise do
+    not operate the way one would expect when testing.
     """
-    def __init__(self, driver):
+
+    def __init__(self, driver: Chrome | Chromium | Edge | Firefox, config: FenrirConfig):
         self.driver = driver
+        self._timeout = config.common.timeout
+        self.config = config
 
-    def scroll_to_top(self):
+    def get(self, url: str):
+        return self.driver.get(url)
+
+    def scroll_to_top(self) -> None:
         self.driver.execute_script("window.scroll(0, 0);")
 
-    def scroll_to_bottom(self):
+    def scroll_to_bottom(self) -> None:
         self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
 
-    def by_name(self, name_selector):
+    def find_element(self, by: By, selector: str) -> WebElement:
+        """
+        Adding timeouts and catch a really stupid StaleElementReference Exceptions
+        because that is not something that would ever interfere with the operation of a test.
+        a normal web-application it just makes dynamically changed elements short circuit the whole test.
+        :Param: by: By - from selenium.webdriver.common.by import By
+        :Param: selector: str - Should be the selector for your element.
+        """
         try:
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.NAME, name_selector))
+            WebDriverWait(self.driver, timeout=self._timeout).until(
+                expected_conditions.visibility_of_element_located((by, selector))
             )
-            return self.driver.find_element(By.NAME, name_selector)
+            return self.driver.find_element(by, selector)
         except StaleElementReferenceException:
-            self.driver.implicity_wait(10)
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.NAME, name_selector))
+            WebDriverWait(self.driver, timeout=self._timeout).until(
+                expected_conditions.visibility_of_element_located((by, selector))
             )
-            return self.driver.find_element(By.NAME, name_selector)
+            return self.driver.find_element(by, selector)
 
-    def by_id(self, id_selector):
-        try:
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.ID, id_selector)))
-            return self.driver.find_element(By.ID, id_selector)
-        except StaleElementReferenceException:
-            self.driver.implicity_wait(10)
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.ID, id_selector)))
-            return self.driver.find_element(By.ID, id_selector)
+    def find_elements(self, by: By, selector: str) -> list[WebElement]:
+        return self.driver.find_elements(by=by, value=selector)
 
-    def by_class_name(self, class_name_selector):
-        try:
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.CLASS_NAME, class_name_selector)))
-            return self.driver.find_element(By.CLASS_NAME, class_name_selector)
-        except StaleElementReferenceException:
-            self.driver.implicity_wait(10)
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.CLASS_NAME, class_name_selector)))
-            return self.driver.find_element(By.CLASS_NAME, class_name_selector)
-
-    def by_css_selector(self, css_selector):
-        try:
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
-            return self.driver.find_element(By.CSS_SELECTOR, css_selector)
-        except StaleElementReferenceException:
-            self.driver.implicity_wait(10)
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
-            return self.driver.find_element(By.CSS_SELECTOR, css_selector)
-
-    def by_xpath(self, xpath_query):
-        try:
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.XPATH, xpath_query))
-            )
-            return self.driver.find_element(By.XPATH, xpath_query)
-        except StaleElementReferenceException:
-            self.driver.implicity_wait(10)
-            WebDriverWait(self.driver, timeout=wait_timeout).until(
-                expected_conditions.visibility_of_element_located((By.XPATH, xpath_query))
-            )
-            return self.driver.find_element(By.XPATH, xpath_query)
