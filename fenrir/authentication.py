@@ -1,96 +1,72 @@
 import os
-import time
 import logging
 import json
+from dataclasses import dataclass
 from pathlib import Path
-from os import environ
+from typing import List, Dict
 
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
 
-from auto.fenrir import CorePage
-
-
-class LoginPage:
-    login_url = os.getenv('LOGIN_SITE')
-    input_login_username_id = os.getenv('LOGIN_USERNAME')
-    input_login_password_id = os.getenv('LOGIN_PASSWORD')
-    button_login_sign_in_id = os.getenv('LOGIN_BUTTON')
+from fenrir.config import FenrirConfig
+from fenrir.core_page import CorePage, webdriver_create
 
 
-def auth_headless(username: str, password: str, cluster: str):
+def headless_options():
     options = Options()
     options.add_argument('--headless')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
-    driver.get(cluster)
-    core = CorePage(driver=driver)
-    core.by_id(LoginPage.input_login_username_id).send_keys(username)
-    pw = core.by_id(LoginPage.input_login_password_id)
-    pw.send_keys(password)
-    pw.send_keys(Keys.RETURN)
-    waiting = 0
-    timeout = 20
-    while waiting <= timeout:
-        if driver.current_url.__contains__(cluster):
-            break
-        else:
-            time.sleep(1)
-        waiting += 1
+
+
+@dataclass
+class LoginElements:
+    username_input: str
+    password_input: str
+    login_button: str
+
+
+def get_auth_cookies(config: FenrirConfig, elements: LoginElements) -> List[Dict]:
+    """
+    This method does a login for 3 leg authentication and returns the cookies which
+    can then be used later for tests.
+    """
+    driver = webdriver_create('chrome', headless_options())
+    core = CorePage(driver, config)
+    core.get(config.auth.target_system)
+    core.find_element(By.ID, elements.username_input).send_keys(config.auth.username)
+    core.find_element(By.ID, elements.password_input).send_keys(config.auth.password)
+    core.find_element(By.ID, elements.login_button).click()
     cookies = driver.get_cookies()
-    logging.info(cookies)
     driver.quit()
-    return cookies[0]
+    return cookies
 
 
-def auth_headed(driver, username: str, password: str, site: str):
-    core = CorePage(driver)
-    driver.get(site)
-    core.by_id(LoginPage.input_login_username_id).send_keys(username)
-    core.by_id(LoginPage.input_login_password_id).send_keys(password)
-    core.by_id(LoginPage.button_login_sign_in_id).click()
-    waiting = 0
-    timeout = 20
-    while waiting <= timeout:
-        if driver.current_url.__contains__(site):
-            break
-        else:
-            time.sleep(1)
-        waiting += 1
+def auth_headed(config: FenrirConfig, elements: LoginElements, opts: Options):
+    """
+    Login for a test system keyed off of ID elements.
+    """
+    driver = webdriver_create('chrome', opts)
+    core = CorePage(driver, config)
+    driver.get(config.auth.target_system)
+    core.find_element(By.ID, elements.username_input).send_keys(config.auth.username)
+    core.find_element(By.ID, elements.password_input).send_keys(config.auth.password)
+    core.find_element(By.ID, elements.login_button).click()
 
 
-FILENAME = "../../tests/api/authentication_file.json"
-USERNAME = environ.get('SITE_USERNAME')
-PASSWORD = environ.get('SITE_PASSWORD')
-SITE = environ.get('SITE')
-
-assert USERNAME
-assert PASSWORD
-assert SITE
-
-
-def get_auth_token(username: str, password: str, site: str):
-    token = auth_headless(username=username, password=password, cluster=site)
-    cookie = token['value']
-    environ['AUTH_TOKEN_VALUE'] = cookie
-    environ['AUTH_TOKEN_NAME'] = '_oauth2_proxy'
-    return {environ.get('AUTH_TOKEN_NAME'): environ.get('AUTH_TOKEN_VALUE')}
-
-
-def token_file():
+def generate_token_file(cookies: List[Dict]):
     """
     Creates a file that stores the oauth2 token required to access clusters.
     :return: Name of file.
     """
-    auth_file_path = Path(FILENAME)
+    _filename = f"{os.getcwd()}/authentication_file.json"
+    auth_file_path = Path(_filename)
+    # TODO: Parse the cookies
+    auth_cookie = cookies[0]
     if auth_file_path.is_file():
         logging.info(auth_file_path)
         return auth_file_path
     else:
-        _oauth_proxy_cookie = get_auth_token(username=USERNAME, password=PASSWORD, site=SITE)
-        with open(FILENAME, 'w') as f:
-            f.write(json.dumps(_oauth_proxy_cookie))
-        return FILENAME
+        with open(_filename, 'w') as f:
+            f.write(json.dumps(auth_cookie))
+        return _filename

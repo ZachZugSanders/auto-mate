@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "fenrir"
+version = "0.1.0"
+description = "Baseline framework for testing stuff"
+authors = ["zach sanders <zach.sanders@exodusintel.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+webdriver-manager = "^3.8.6"
+PyVirtualDisplay = "^3.0"
+pytest = "^7.4.0"
+PyYAML = "^6.0"
+selenium = "^4.10.0"
+"python-owasp-zap-v2.4" = "^0.0.21"
+beautifulsoup4 = "^4.12.2"
+lorem-text = "^2.1"
+python-dotenv = "^1.0.0"
+black = "^23.7.0"
+structlog = "^23.1.0"
+pydantic = "^2.0.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
