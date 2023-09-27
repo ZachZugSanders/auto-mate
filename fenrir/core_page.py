@@ -2,6 +2,7 @@ import os
 import time
 from typing import Callable
 
+from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
@@ -35,40 +36,28 @@ def webdriver_create(browser: str, opts=None):
     """
     if opts is None:
         opts = {}
-    from selenium import webdriver
 
     browser = browser.upper()
 
     match browser:
         case "CHROME":
-            from webdriver_manager.chrome import ChromeDriverManager
 
             driver = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()), options=opts
+                service=Service(), options=opts
             )
         case "CHROMIUM":
             from selenium.webdriver.chrome.service import Service as ChromeService
-            from webdriver_manager.chrome import ChromeDriverManager
-            from webdriver_manager.chrome import ChromeType
 
             return webdriver.Chrome(
-                service=ChromeService(
-                    ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-                ),
+                service=ChromeService(),
                 options=opts,
             )
         case "FIREFOX":
-            from webdriver_manager.firefox import GeckoDriverManager
 
-            driver = webdriver.Firefox(
-                service=Service(executable_path=GeckoDriverManager().install()),
-                options=opts,
-            )
+            driver = webdriver.Firefox(options=opts)
         case "EDGE":
-            from webdriver_manager.microsoft import EdgeChromiumDriverManager
-
             driver = webdriver.Edge(
-                service=Service(EdgeChromiumDriverManager().install()), options=opts
+                service=Service(), options=opts
             )
         case "SAFARI":
             driver = webdriver.Safari(options=opts)

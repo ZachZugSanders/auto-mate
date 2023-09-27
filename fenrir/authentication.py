@@ -31,7 +31,7 @@ def get_auth_cookies(config: FenrirConfig, elements: LoginElements) -> List[Dict
     This method does a login for 3 leg authentication and returns the cookies which
     can then be used later for tests.
     """
-    driver = webdriver_create('chrome', headless_options())
+    driver = webdriver_create(browser='chrome', opts=headless_options())
     core = CorePage(driver, config)
     core.get(config.auth.target_system)
     core.find_element(By.ID, elements.username_input).send_keys(config.auth.username)
@@ -40,19 +40,6 @@ def get_auth_cookies(config: FenrirConfig, elements: LoginElements) -> List[Dict
     cookies = driver.get_cookies()
     driver.quit()
     return cookies
-
-
-def auth_headed(config: FenrirConfig, elements: LoginElements, opts: Options):
-    """
-    Login for a test system keyed off of ID elements.
-    """
-    driver = webdriver_create('chrome', opts)
-    core = CorePage(driver, config)
-    driver.get(config.auth.target_system)
-    core.find_element(By.ID, elements.username_input).send_keys(config.auth.username)
-    core.find_element(By.ID, elements.password_input).send_keys(config.auth.password)
-    core.find_element(By.ID, elements.login_button).click()
-
 
 def generate_token_file(cookies: List[Dict]):
     """
