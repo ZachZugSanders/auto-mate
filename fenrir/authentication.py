@@ -1,12 +1,12 @@
-import os
-import logging
 import json
+import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict
 
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 from fenrir.config import FenrirConfig
 from fenrir.core_page import CorePage, webdriver_create
@@ -40,6 +40,7 @@ def get_auth_cookies(config: FenrirConfig, elements: LoginElements) -> List[Dict
     cookies = driver.get_cookies()
     driver.quit()
     return cookies
+
 
 def generate_token_file(cookies: List[Dict]):
     """

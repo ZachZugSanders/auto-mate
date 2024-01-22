@@ -4,17 +4,22 @@ done to test a product.
 
 ### Development
 
-This project uses poetry to manage dependencies.
-I have generated a requirements.txt from poetry if you want to 
-use pip (please don't...)
+This project uses poetry to manage dependencies. To install poetry, run the
+following command:
 
-```pip install poetry```
+```shell
+pip install poetry
+```
 
-```poetry install```
+```shell
+poetry install
+```
 
+### Framework
+- Built to run specific sites which are located in the sites package.
+- Uses pytest to run tests.
 
-
----
+--- 
 
 ```python
 import pytest

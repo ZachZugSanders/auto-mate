@@ -5,6 +5,7 @@ from typing import Callable
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
 from selenium.webdriver.chromium.webdriver import ChromiumDriver as Chromium
 from selenium.webdriver.common.by import By
@@ -41,28 +42,24 @@ def webdriver_create(browser: str, opts=None):
 
     match browser:
         case "CHROME":
-
-            driver = webdriver.Chrome(
+            return webdriver.Chrome(
                 service=Service(), options=opts
             )
         case "CHROMIUM":
-            from selenium.webdriver.chrome.service import Service as ChromeService
-
             return webdriver.Chrome(
                 service=ChromeService(),
                 options=opts,
             )
         case "FIREFOX":
-
-            driver = webdriver.Firefox(options=opts)
+            return webdriver.Firefox(options=opts)
         case "EDGE":
-            driver = webdriver.Edge(
+            return webdriver.Edge(
                 service=Service(), options=opts
             )
         case "SAFARI":
-            driver = webdriver.Safari(options=opts)
+            return webdriver.Safari(options=opts)
         case "REMOTE":
-            driver = webdriver.Remote(
+            return webdriver.Remote(
                 command_executor=os.getenv(
                     "FENRIR_REMOTE_WEBDRIVER", "http://localhost:4444"
                 ),
@@ -73,7 +70,6 @@ def webdriver_create(browser: str, opts=None):
                 browser,
                 f"Specified Driver {browser} is not present in webdriver_manager",
             )
-    return driver
 
 
 class CorePage:

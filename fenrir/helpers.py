@@ -1,6 +1,7 @@
+from time import sleep
+
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
-from time import sleep
 
 
 def clear_element(element):
